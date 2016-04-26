@@ -5,6 +5,7 @@ export const LOGIN_USER = "LOGIN_USER"
 export const SEARCH_MOVIES_SUCCESS = "SEARCH_MOVIES_SUCCESS"
 export const GET_SUGGESTIONS_SUCCESS = "GET_SUGGESTIONS_SUCCESS"
 export const GET_MOVIE_SUCCESS = "GET_MOVIE_SUCCESS"
+export const GET_CAST_SUCCESS = "GET_CAST_SUCCESS"
 
 const movies = firebase("https://firemovies.firebaseio.com/movies")
 const cast = firebase("https://firemovies.firebaseio.com/cast")
@@ -38,7 +39,6 @@ export function showMovieDetails(id) {
 }
 
 function searchMoviesSuccess(movies) {
-  console.log("success: ", movies)
   return {
     type: SEARCH_MOVIES_SUCCESS,
     movies
@@ -63,7 +63,26 @@ function getSuggestionsSuccess(movies) {
   }
 }
 
-function maybeGetMovie(id) {
+export function getOrFetchCast(xs) {
+  return (dispatch, getState) => {
+    const { cast } = getState()
+    return Promise.all(xs.map(x => _getOrFetchCast(x, cast, dispatch)))
+  }
+}
+
+function _getOrFetchCast(id, mycast, dispatch) {
+  if (mycast[id]) {
+    return Promise.resolve(mycast[id])
+  }
+
+  return cast.get([id])
+    .then(([x]) => {
+      dispatch(getCastSuccess(x))
+      return x
+    })
+}
+
+function getOrFetchMovie(id, mymovies, dispatch) {
 }
 
 function getMovieSuccess(movie) {
@@ -75,29 +94,52 @@ function getMovieSuccess(movie) {
   }
 }
 
+function _maybeLookupMovie(id, movies, dispatch) {
+  if (movies[id]) {
+    return Promise.resolve(movies[id])
+  } else {
+    return movielookup.get([id])
+      .then(([x]) => {
+        dispatch(getMovieSuccess(x))
+        return x
+      })
+  }
+}
+
 export function maybeGetMovieDetails(id) {
   return (dispatch, getState) => {
     const { movies } = getState()
-    let getMovie
-    if (movies[id]) {
-      getMovie = Promise.resolve(movies[id])
-    } else {
-      getMovie = movielookup.get([id]).then(([x]) => x)
-    }
-
-    return getMovie
-      .then(movie => dispatch(getMovieSuccess(movie)))
+    return _maybeLookupMovie(id, movies, dispatch)
+      .then(movie => {
+        let xs = getAllCast(movie)
+        const { cast } = getState()
+        return Promise.all(xs.map(x => _getOrFetchCast(x, cast, dispatch)))
+      })
       .catch(log)
   }
 }
 
+function getCastSuccess(actor) {
+  let m = {}
+  m[actor.Id] = actor
+  return {
+    type: GET_CAST_SUCCESS,
+    actor: m
+  }
+}
+
 export function getMovieSuggestions(movie) {
-  return (dispatch) => {
-    return movielookup.get([movie])
-      .then(([first]) => getAllCast(first))
-      .then(cast.get)
+  return (dispatch, getState) => {
+    const { movies } = getState()
+    //return movielookup.get([movie])
+    return _maybeLookupMovie(movie, movies, dispatch)
+      .then((first) => getAllCast(first))
+      .then(c => {
+        const { cast } = getState()
+        return Promise.all(c.map(x => _getOrFetchCast(x, cast, dispatch)))
+      })
+      //.then(cast.get)
       .then(xs => {
-        console.log("suggestion results:", xs)
         let seen = {}
         xs.map(x => x.Movies)
           .reduce((a,c) => a.concat(c))
@@ -108,9 +150,12 @@ export function getMovieSuggestions(movie) {
 
         return kvp.slice(1,11).map(([k,v]) => k)
       })
-      .then(movielookup.get)
+      .then(matches => {
+        const { movies } = getState()
+        return Promise.all(matches.map(x => _maybeLookupMovie(x, movies, dispatch)))
+      })
       .then(movies => dispatch(getSuggestionsSuccess(movies)))
-      .catch(log)
+      .catch(err => console.log(err.stack))
   }
 }
 

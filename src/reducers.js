@@ -4,6 +4,7 @@ import {
   SEARCH_MOVIES_SUCCESS,
   GET_SUGGESTIONS_SUCCESS,
   GET_MOVIE_SUCCESS,
+  GET_CAST_SUCCESS,
 } from './actions'
 
 const initialUser = {
@@ -52,6 +53,8 @@ function movies(state = {}, action) {
 
 function cast(state = {}, action) {
   switch(action.type) {
+  case GET_CAST_SUCCESS:
+    return Object.assign({}, state, action.actor)
   default:
     return state
   }
