@@ -131,14 +131,12 @@ function getCastSuccess(actor) {
 export function getMovieSuggestions(movie) {
   return (dispatch, getState) => {
     const { movies } = getState()
-    //return movielookup.get([movie])
     return _maybeLookupMovie(movie, movies, dispatch)
-      .then((first) => getAllCast(first))
+      .then(getAllCast)
       .then(c => {
         const { cast } = getState()
         return Promise.all(c.map(x => _getOrFetchCast(x, cast, dispatch)))
       })
-      //.then(cast.get)
       .then(xs => {
         let seen = {}
         xs.map(x => x.Movies)
