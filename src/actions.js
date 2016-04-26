@@ -4,6 +4,7 @@ import { union } from './utils'
 export const LOGIN_USER = "LOGIN_USER"
 export const SEARCH_MOVIES_SUCCESS = "SEARCH_MOVIES_SUCCESS"
 export const GET_SUGGESTIONS_SUCCESS = "GET_SUGGESTIONS_SUCCESS"
+export const GET_MOVIE_SUCCESS = "GET_MOVIE_SUCCESS"
 
 const movies = firebase("https://firemovies.firebaseio.com/movies")
 const cast = firebase("https://firemovies.firebaseio.com/cast")
@@ -62,6 +63,34 @@ function getSuggestionsSuccess(movies) {
   }
 }
 
+function maybeGetMovie(id) {
+}
+
+function getMovieSuccess(movie) {
+  let m = {}
+  m[movie.Id] = movie
+  return {
+    type: GET_MOVIE_SUCCESS,
+    movie: m
+  }
+}
+
+export function maybeGetMovieDetails(id) {
+  return (dispatch, getState) => {
+    const { movies } = getState()
+    let getMovie
+    if (movies[id]) {
+      getMovie = Promise.resolve(movies[id])
+    } else {
+      getMovie = movielookup.get([id]).then(([x]) => x)
+    }
+
+    return getMovie
+      .then(movie => dispatch(getMovieSuccess(movie)))
+      .catch(log)
+  }
+}
+
 export function getMovieSuggestions(movie) {
   return (dispatch) => {
     return movielookup.get([movie])
@@ -96,7 +125,7 @@ function log(err) {
   console.error(err)
 }
 
-function getAllCast(movie) {
+export function getAllCast(movie) {
   return ["Actors","Directors","Writers"]
       .map(x => movie[x] || [])
       .reduce((a,c) => a.concat(c))

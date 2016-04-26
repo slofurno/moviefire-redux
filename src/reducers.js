@@ -3,6 +3,7 @@ import {
   LOGIN_USER,
   SEARCH_MOVIES_SUCCESS,
   GET_SUGGESTIONS_SUCCESS,
+  GET_MOVIE_SUCCESS,
 } from './actions'
 
 const initialUser = {
@@ -40,10 +41,28 @@ function suggestions(state = [], action) {
   }
 }
 
+function movies(state = {}, action) {
+  switch(action.type) {
+  case GET_MOVIE_SUCCESS:
+    return Object.assign({}, state, action.movie)
+  default:
+    return state
+  }
+}
+
+function cast(state = {}, action) {
+  switch(action.type) {
+  default:
+    return state
+  }
+}
+
 const rootReducer = combineReducers({
   user,
   searchResults,
-  suggestions
+  suggestions,
+  movies,
+  cast
 })
 
 export default rootReducer

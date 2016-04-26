@@ -18,8 +18,10 @@ class App extends Component {
         width: "400px",
         backgroundColor: "ghostwhite"
       }}>
-       <input type="text" ref="movieTitle" placeholder="movie title..."/>
-       <input type="button" value="Search" onClick = { () => searchMovies(this.refs.movieTitle.value) }/>
+      <div style = {{flex: "0 0 auto"}}>
+        <input type="text" ref="movieTitle" placeholder="movie title..."/>
+        <input type="button" value="Search" onClick = { () => searchMovies(this.refs.movieTitle.value) }/>
+      </div>
 
         { children }
       </div>

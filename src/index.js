@@ -9,6 +9,7 @@ import Welcome from './containers/welcome'
 import Login from './containers/login'
 import MovieSearch from './containers/search'
 import Suggestions from './containers/suggestions'
+import MovieDetails from './containers/moviedetails'
 
 const store = configureStore()
 let unsubscribe = store.subscribe(() => console.log(store.getState()))
@@ -22,6 +23,7 @@ class Root extends Component {
           <Route path="/" component={App}>
             <Route path="/search/:title" component={MovieSearch}/>
             <Route path="/suggestions/:movieId" component={Suggestions}/>
+            <Route path="/movies/:movieId" component={MovieDetails}/>
             <Route path="/login/:name" component={Welcome}/>
             <Route path="/login" component={Login}/>
           </Route>
